@@ -32,6 +32,7 @@ html(lang='en')
       #counterBox.panel.panel-default.overlay
       .topBtns.overlay.text-center(align="center")
         button.btn.btn-lg.btn-primary(id='colorBtn', type='button') Show/hide color (C)
+        //button.btn.btn-lg.btn-primary(id='preannotBtn', type='button') Preannotate Scene (P)
         button.btn.btn-lg.btn-primary(id='labelObbBtn', type='button') Label box (R)
         button.btn.btn-lg.btn-primary(id='unlabelObbBtn', type='button') Unlabel box (D)
         button.btn.btn-lg.btn-primary(id='overrideBtn', type='button', style="display:none") Toggle distance override (O)
@@ -62,29 +63,45 @@ html(lang='en')
       $('#guidelinesPanel').click(function () {
         $('#guidelines').toggle();
       });
-      var annotator = new STK.SegmentAnnotator({
-        container: document.getElementById('canvas'),
-        delayedLoading: true,
-        video: document.getElementById('video'),
-        labelsPanel: {
-          addNewLabelToTop: true,
-          suggestions: !{JSON.stringify(taskInfo.labels || [])}
+      $.ajax({
+        type: 'POST',
+        url: 'http://127.0.0.1:5000/preannot',
+        data: JSON.stringify({
+          file_name: "#{modelId}"
+        }),
+        contentType: "application/json",
+        success: function(res) {
+          console.log(res);
         },
-        annotationChecks: !{JSON.stringify(taskInfo.annotationChecks || null)},
-        segmentType: '#{segmentType}',
-        surveys: !{JSON.stringify(surveys || null)},
-        // Where we will go next after finishing with this annotation
-        onCloseUrl: "#{nextUrl}",
-        // For progress counter display
-        numItemsAnnotated: #{modelsAnnotated},
-        numItemsTotal: #{totalToAnnotate}
-      });
-      annotator.start();
-      annotator.assetManager.registerCustomAssetGroups({
-        assetFiles: STK.Constants.scanAssetsFile,
-        filterByAssetId: annotator.getAnnotationItemId(),
-        callback: function(err, res) {
-          annotator.setupScene();
+        error: function(jqXHR, textStatus, errorThrown){
+          console.log(errorThrown);
+        },
+        complete: function () {
+          var annotator = new STK.SegmentAnnotator({
+            container: document.getElementById('canvas'),
+            delayedLoading: true,
+            video: document.getElementById('video'),
+            labelsPanel: {
+              addNewLabelToTop: true,
+              suggestions: !{JSON.stringify(taskInfo.labels || [])}
+            },
+            annotationChecks: !{JSON.stringify(taskInfo.annotationChecks || null)},
+            segmentType: '#{segmentType}',
+            surveys: !{JSON.stringify(surveys || null)},
+            // Where we will go next after finishing with this annotation
+            onCloseUrl: "#{nextUrl}",
+            // For progress counter display
+            numItemsAnnotated: #{modelsAnnotated},
+            numItemsTotal: #{totalToAnnotate}
+          });
+          annotator.start();
+          annotator.assetManager.registerCustomAssetGroups({
+            assetFiles: STK.Constants.scanAssetsFile,
+            filterByAssetId: annotator.getAnnotationItemId(),
+            callback: function(err, res) {
+              annotator.setupScene();
+            }
+          });
+          window.app = annotator;  // For console debugging!
         }
       });
-      window.app = annotator;  // For console debugging!

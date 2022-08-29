@@ -10,5 +10,9 @@
   {
     "name": "yobi3d",
     "metadata": "${assetsDir}/data/shapenet/shapenet.yobi3d.metadata.json"
+  },
+  {
+    "name": "scannet++",
+    "metadata": "${assetsDir}/data/scannetpp/scannetpp.json"
   }
 ]

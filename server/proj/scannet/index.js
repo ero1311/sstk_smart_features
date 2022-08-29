@@ -21,7 +21,7 @@ var annDb = new SQLAnnotationDb(config.annDb);
 // NYUv2
 app.get('/nyuv2', function (req, res) { res.render('nyuv2-annotations'); });
 app.get('/nyuv2-parts', function (req, res) { res.render('nyuv2-part-annotations'); });
-
+app.get('/scannetpp', function (req, res) { res.render('scannetpp-annotations'); });
 
 // ScanNet (official anonymized)
 function renderGrouped(req, res) {

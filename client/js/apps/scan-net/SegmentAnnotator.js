@@ -224,7 +224,7 @@ function SegmentAnnotator(params) {
     obbsVisible: true,
     checkLabelable: true,
     video: null,
-    startFrom: 'latest', // Fixup from latest fixup (if available), otherwise from aggregation
+    startFrom: 'aggr', // Fixup from latest fixup (if available), otherwise from aggregation
                          // Other options are 'aggr', or a annotationId (integer)
     taskMode: 'new',  // Options are 'new', 'fixup', 'coverage',
     messages: {
@@ -272,8 +272,10 @@ function SegmentAnnotator(params) {
     if (scope.taskMode !== 'new') {
       console.log('preparing for taskMode ' + scope.taskMode + ' ' + scope.startFrom);
       if (scope.startFrom === 'latest') {
+        console.log("Latest");
         scope.loadLatestAnnotation(modelInfo.fullId);
       } else if (scope.startFrom !== 'aggr'/* && _.isInteger(scope.startFrom)*/) {
+        console.log("Aggr");
         scope.loadRawAnnotations(modelInfo.fullId, scope.startFrom);
       }
     }
@@ -734,6 +736,7 @@ SegmentAnnotator.prototype.__labelFromExisting = function(opts) {
     console.log('Using raw annotations ' + (this.__useCleanAnnotations ? 'cleaned' : ''));
     anns = this.__rawAnnotations;
   }
+  console.log("ANNS", anns, opts);
   if (anns) {
     opts.segmentGroups = _.map(anns, function(ann) {
       var segGroup = _.omit(ann, 'segments');
