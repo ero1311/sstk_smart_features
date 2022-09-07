@@ -159,6 +159,11 @@ function SegmentAnnotator(params) {
         shortcut: 's'
       },
       {
+        name: 'showUncertain',
+        click: function () { this.__showMostUncertain(); }.bind(this),
+        shortcut: 'u'
+      },
+      {
         name: 'obb',
         click: function () {
           this.obbsVisible = !this.obbsVisible;
@@ -474,6 +479,7 @@ SegmentAnnotator.prototype.registerCustomEventListeners = function () {
  * @returns array of annotated segment groups
  */
 SegmentAnnotator.prototype.annotate = function (debug) {
+  console.log('ha eli gag');
   this.clearDebug();
   this.annotations = [];
   var modelId = this.modelId;
@@ -832,8 +838,56 @@ SegmentAnnotator.prototype.__showLargestUnlabeledSegment = function() {
     this.largestUnlabeledShown[largest.segId]++;
     largest.shownTimes = this.largestUnlabeledShown[largest.segId];
   }
+  console.log(largest);
   this.largestUnlabeledSeg = largest;
   return largest;
+};
+
+SegmentAnnotator.prototype.__showMostUncertain = async function() {
+  if (!this.__largestColorMat) {
+    this.__largestColorMat = Object3DUtil.getSimpleFalseColorMaterial(0, '#ff0000');
+  }
+  this.mostUncertainShown = this.mostUncertainShown || {};
+  this.clearDebug();
+  //console.log(Object.keys(this.labeler.segments.rawSegmentObject3D.userData.segs).length, Object.keys(this.labeler.segments.rawSegmentObject3D.userData.segToVertIndices).length);
+  var most = null;
+  let labels = [];
+  let segs = this.labeler.segments.rawSegmentObject3D.userData.segs
+  for (let segId in segs){
+    if (segs[segId].labelInfo){
+      labels.push(segId);
+    }
+  }
+  $.ajax({
+    type: 'POST',
+    url: 'http://127.0.0.1:5000/suggest',
+    data: JSON.stringify({
+      file_name: this.modelId,
+      annot_segs: labels
+    }),
+    contentType: "application/json",
+    success: function(res) {
+      most = res.data
+      console.log(most);
+      if (most) {
+        most.obb = this.labeler.segments.fitOBB('Raw', [most.segId]);
+        this.__addOBB(most.obb, this.__largestColorMat);
+        this.mostUncertainShown[most.segId] = this.mostUncertainShown[most.segId] || 0;
+        this.mostUncertainShown[most.segId]++;
+        most.shownTimes = this.mostUncertainShown[most.segId];
+      }
+      else {
+        alert(res.message);
+        this.mostUncertainSeg = most;
+        return most
+      }
+    }.bind(this),
+    error: function(jqXHR, textStatus, errorThrown){
+      console.log(errorThrown);
+      this.mostUncertainSeg = most;
+      return most
+    }.bind(this)
+  });
 };
 
 SegmentAnnotator.prototype.onWindowResize = function (options) {

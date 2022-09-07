@@ -103,5 +103,19 @@ html(lang='en')
             }
           });
           window.app = annotator;  // For console debugging!
+          $.ajax({
+            type: 'POST',
+            url: 'http://127.0.0.1:5000/uncty',
+            data: JSON.stringify({
+              file_name: "#{modelId}"
+            }),
+            contentType: "application/json",
+            success: function(res) {
+              console.log(res);
+            },
+            error: function(jqXHR, textStatus, errorThrown){
+              console.log(errorThrown);
+            }
+          });
         }
       });
